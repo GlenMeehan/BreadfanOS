@@ -1,0 +1,13 @@
+# Compiled files
+*.img
+*.bin
+*.o
+
+# Build directory contents (but keep the folder)
+build/*
+!build/.gitkeep
+
+# Editor files
+*.swp
+*~
+.DS_Store
