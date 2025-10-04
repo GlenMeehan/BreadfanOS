@@ -22,20 +22,22 @@ safe_to_close_msg:
 ; ===== HELP AND INFO MESSAGES =====
 help_msg:
     db 'Available commands:', 10
-    db '  clear    - Clear the screen', 10
-    db '  drives   - Detect available drives', 10
-    db '  exit     - Shutdown system', 10
-    db '  fs       - File system status', 10
-    db '  hello    - Display greeting', 10
-    db '  help     - Show this help', 10
-    db '  info     - Show system information', 10
-    db '  ls       - List files', 10
-    db '  writet   - Write test to hdd', 10
-    db '  readd    - Read from hdd', 10
-    db '  debug    - Show buffer contents', 10
-    db '  numtest  - Test string parsing', 10
-    db '  calc     - Calculator (e.g. calc 5 + 3)', 10
-    db '  makefile - Create new file', 10, 0
+    db '  clear - Clear the screen', 10
+    db '  drives    - Detect available drives', 10
+    db '  exit  - Shutdown system', 10
+    db '  fs    - File system status', 10
+    db '  hello - Display greeting', 10
+    db '  help  - Show this help', 10
+    db '  info  - Show system information', 10
+    db '  ls    - List files', 10
+    db '  writet    - Write test to hdd', 10
+    db '  readd - Read from hdd', 10
+    db '  debug - Show buffer contents', 10
+    db '  numtest   - Test string parsing', 10
+    db '  calc  - Calculator (e.g. calc 5 + 3)', 10
+    db '  write - Write a file', 10
+    db '  cat   - Read file', 10
+    db '  makefile  - Create new file', 10, 0
 
 hello_msg:
     db 'Hello from BreadfanOS v2.0!', 10, 0
@@ -134,6 +136,8 @@ cmd_readd:          db 'readd', 0
 cmd_calc_test:      db 'numtest', 0
 calc_cmd:           db 'calc', 0
 cmd_debug:          db 'debug', 0
+cmd_write:          db 'write', 0
+cmd_cat:            db 'cat', 0
 
 ; ===== BUFFERS AND VARIABLES =====
 command_buffer:     times 64 db 0
@@ -144,6 +148,8 @@ temp_char:          db 0, 0
 newline:            db 10, 0
 newline_str:        db 10, 0
 
+content_buffer:     times 512 db 0   ; Buffer for file content (1 sector)
+
 ; ===== FILE SYSTEM DATA =====
 fs_directory:       times (FS_MAX_FILES * FS_ENTRY_SIZE) db 0
 
@@ -152,8 +158,27 @@ test_file2:         db 'config.sys', 0
 
 test_string_123:    db "123", 0
 
+fs_file_detail:     db ' - ', 0
+bytes_msg:          db ' bytes, sector ', 0
+sector_msg:         db '', 0
+fs_no_space_msg:    db 'Error: No space in directory (max 8 files)', 10, 0
+fs_file_not_found:  db 'Error: File not found', 10, 0
+fs_write_success:   db 'File written successfully', 10, 0
+fs_read_success:    db 'File contents:', 10, 0
+
+
 ; ===== CALCULATOR VARIABLES =====
 first_number:       dw 0
 second_number:      dw 0
 operator:           db 0
 calc_result:        dw 0
+
+; Write command messages
+write_usage_msg:        db 'Usage: write <filename> <content>', 10, 0
+write_no_content_msg:   db 'Error: No content specified', 10, 0
+fs_write_error_msg:     db 'Error: Failed to write file', 10, 0
+
+; Cat command messages
+cat_usage_msg:          db 'Usage: cat <filename>', 10, 0
+cat_empty_msg:          db '(empty file)', 10, 0
+cat_error_msg:          db 'Error: Failed to read file', 10, 0

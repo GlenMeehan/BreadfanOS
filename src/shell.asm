@@ -156,6 +156,14 @@ process_command:
     call check_command
     jz calculator
 
+    mov di, cmd_write
+    call check_command
+    jz cmd_write_handler
+
+    mov di, cmd_cat
+    call check_command
+    jz cmd_cat_handler
+
     ; Check for empty command
     mov si, command_buffer
     cmp byte [si], 0
@@ -223,6 +231,182 @@ cmd_debug_handler:
 
 cmd_test_number_parsing_handler:
     call test_number_parsing
+    ret
+
+
+
+; Usage: write <filename> <content>
+cmd_write_handler:
+    pusha
+
+    ; Extract filename (skip "write ")
+    mov si, command_buffer
+    add si, 6  ; Skip "write "
+
+    ; Copy filename to temp_buffer
+    mov di, temp_buffer
+    xor cx, cx
+
+.copy_filename:
+    lodsb
+    cmp al, 0
+    je .no_filename
+    cmp al, ' '
+    je .filename_done
+    stosb
+    inc cx
+    cmp cx, 12
+    jl .copy_filename
+
+.filename_done:
+    mov byte [di], 0  ; Null terminate filename
+
+    ; Skip spaces to find content
+.skip_space:
+    lodsb
+    cmp al, 0
+    je .no_content
+    cmp al, ' '
+    je .skip_space
+
+    ; SI now points to start of content
+    ; Copy content to content_buffer
+    dec si  ; Back up one (we read one too far)
+    mov di, content_buffer
+    xor cx, cx
+
+.copy_content:
+    lodsb
+    cmp al, 0
+    je .content_done
+    cmp al, 13  ; Carriage return
+    je .content_done
+    stosb
+    inc cx
+    cmp cx, 511  ; Max content size
+    jl .copy_content
+
+.content_done:
+    mov byte [di], 0  ; Null terminate content
+
+    ; Now call fs_write_file
+    ; Input: SI = filename, DI = content buffer, CX = content length
+    mov si, temp_buffer
+    mov di, content_buffer
+    ; CX already has length
+    call fs_write_file
+
+    jc .write_success
+
+    ; Write failed
+    mov si, fs_write_error_msg
+    mov bl, LIGHT_RED
+    call print_colored
+    jmp .done
+
+.write_success:
+    mov si, fs_write_success
+    mov bl, LIGHT_GREEN
+    call print_colored
+    jmp .done
+
+.no_filename:
+    mov si, write_usage_msg
+    mov bl, YELLOW
+    call print_colored
+    jmp .done
+
+.no_content:
+    mov si, write_no_content_msg
+    mov bl, YELLOW
+    call print_colored
+
+.done:
+    popa
+    ret
+
+; Cat command handler
+; Usage: cat <filename>
+cmd_cat_handler:
+    pusha
+
+    ; Extract filename (skip "cat ")
+    mov si, command_buffer
+    add si, 4  ; Skip "cat "
+
+    ; Copy filename to temp_buffer
+    mov di, temp_buffer
+    xor cx, cx
+
+.copy_filename:
+    lodsb
+    cmp al, 0
+    je .filename_done
+    cmp al, ' '
+    je .filename_done
+    cmp al, 13
+    je .filename_done
+    stosb
+    inc cx
+    cmp cx, 12
+    jl .copy_filename
+
+.filename_done:
+    mov byte [di], 0  ; Null terminate
+
+    ; Check if filename is empty
+    cmp byte [temp_buffer], 0
+    je .no_filename
+
+    ; Find the file
+    mov si, temp_buffer
+    call fs_find_file
+    jnc .file_not_found
+
+    ; DI points to directory entry
+    ; Check if file has content
+    mov cx, [di + 12]  ; File size
+    test cx, cx
+    jz .empty_file
+
+    ; Read the file
+    mov si, temp_buffer
+    call fs_read_file
+    jnc .read_error
+
+    ; Print the content
+    mov si, content_buffer
+    mov bl, WHITE
+    call print_colored
+    mov si, newline_str
+    call print_colored
+    jmp .done
+
+.no_filename:
+    mov si, cat_usage_msg
+    mov bl, YELLOW
+    call print_colored
+    jmp .done
+
+.file_not_found:
+    mov si, fs_file_not_found
+    mov bl, LIGHT_RED
+    call print_colored
+    jmp .done
+
+.empty_file:
+    mov si, cat_empty_msg
+    mov bl, LIGHT_GRAY
+    call print_colored
+    jmp .done
+
+.read_error:
+    mov si, cat_error_msg
+    mov bl, LIGHT_RED
+    call print_colored
+
+.done:
+    popa
     ret
 
 cmd_exit_handler:

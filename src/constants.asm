@@ -22,8 +22,12 @@
 ; ===== FILE SYSTEM CONSTANTS =====
 %define FS_MAX_FILES 8
 %define FS_FILENAME_LEN 12
-%define FS_ENTRY_SIZE 16
+%define FS_ENTRY_SIZE 32
 %define FILE_USED 0x01
+
+%define FS_ENTRY_SIZE 32        ; Changed from 16 to 32 bytes per entry
+%define FS_NAME_LENGTH 12
+%define FS_DATA_START 100       ; File data starts at sector 100
 
 ; Directory Entry Structure (16 bytes):
 ; Bytes 0-11:  Filename (12 chars)
@@ -35,3 +39,4 @@
 DISK_BUFFER_SEG equ 0x1000
 HDD_DRIVE equ 0x81
 TEST_SECTOR equ 50
+
