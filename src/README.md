@@ -36,3 +36,11 @@ File content storage (next)
 Program loader
 System call interface
 Memory managemen
+
+
+## Development
+
+BreadfanOS is being developed with assistance from Claude (Anthropic) for:
+- Architecture design and code structure
+- Debugging and problem-solving
+- x86 assembly guidance
